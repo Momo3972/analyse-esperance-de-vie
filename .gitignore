@@ -1,4 +1,23 @@
-.Rproj.user
+# --- Dossiers et fichiers internes R ---
+.Rproj.user/
 .Rhistory
 .RData
 .Ruserdata
+
+# --- Outputs non suivis ---
+outputs/*.csv
+outputs/*.rds
+outputs/*_test.csv
+outputs/*_lm.csv
+outputs/*_rf.csv
+
+# --- Fichiers intermédiaires knitr ---
+rapport_final.knit.md
+rapport_final.utf8.md
+
+# --- Fichiers PDF automatiques ---
+Rplots.pdf
+
+# --- Fichiers Word générés automatiquement ---
+outputs/*.docx
+rapport_final.docx
