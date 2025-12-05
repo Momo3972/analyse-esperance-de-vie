@@ -12,7 +12,7 @@ output:
 knitr::opts_chunk$set(
   echo    = TRUE,
   warning = FALSE,
-  message = FALSE
+  message = FALSE,
 )
 
 library(readr)
@@ -33,218 +33,266 @@ Ce rapport présente une analyse complète des facteurs influençant l'espéranc
 
 Les grandes étapes incluent :
 
-importation et nettoyage des données,
+- importation et nettoyage des données,
 
-analyse exploratoire,
+- analyse exploratoire,
 
-modélisation linéaire (simple, LASSO, stepwise),
+- modélisation linéaire (simple, LASSO, stepwise),
 
-modélisation non linéaire (Random Forest),
+- modélisation non linéaire (Random Forest),
 
-comparaison finale des modèles,
+- comparaison finale des modèles,
 
-extraction des variables les plus explicatives.
+- extraction des variables les plus explicatives.
 
 # 2. Importation et nettoyage des données
+# 2.1 Importation des données brutes et structure initiale
 Rédaction
 
-df <- read_csv("data/Life Expectancy Data.csv")
+life <- read_csv("data/Life Expectancy Data.csv")
 
-Vérification structure initiale
+glimpse(life)
+head(life)
+
+# 2.2 Analyse des valeurs manquantes
 Rédaction
 
-head(df)
-str(df)
+miss_var_summary(life)
+vis_miss(life)
 
-Analyse des valeurs manquantes
+# 2.3 Harmonisation des types et renommage propre
 Rédaction
 
-miss_var_summary(df)
-vis_miss(df)
-
-Harmonisation des types
-Rédaction
-
-df <- df %>%
+life <- life %>%
 mutate(
 Country = as.factor(Country),
 Status = as.factor(Status),
 Year = as.integer(Year)
-)
-
-Renommage propre
-Rédaction
-
-df <- df %>%
+) %>%
 rename(
-life_expectancy = Life expectancy,
-adult_mortality = Adult Mortality,
-infant_deaths = infant deaths,
+life_expectancy =`Life expectancy`,
+adult_mortality = Adult Mortality`,
+infant_deaths = infant deaths`,
 alcohol = Alcohol,
-percentage_expenditure = percentage expenditure,
-hepatitis_b = Hepatitis B,
+percentage_expenditure = percentage expenditure`,
+hepatitis_b = `Hepatitis B`,
 measles = Measles,
 bmi = BMI,
-under_five_deaths = under-five deaths,
+under_five_deaths = `under-five deaths`,
 polio = Polio,
-total_expenditure = Total expenditure,
+total_expenditure = `Total expenditure`,
 diphtheria = Diphtheria,
-hiv_aids = HIV/AIDS,
+hiv_aids = `HIV/AIDS`,
 gdp = GDP,
 population = Population,
-thinness_1_19 = thinness 1-19 years,
-thinness_5_9 = thinness 5-9 years,
-income_composition = Income composition of resources,
+thinness_1_19 = `thinness  1-19 years`,
+thinness_5_9= `thinness  5-9 years`,
+income_composition = `Income composition of resources`,
 schooling = Schooling
 )
 
-names(df)
+names(life)
 
 # 3. Analyse exploratoire
-Statistiques descriptives
+# 3.1 Statistiques descriptives
 Rédaction
 
-summary(df)
+summary(life)
 
-Corrélations entre variables numériques
+# 3.2 Corrélations entre variables numériques
 Rédaction
 
-df_numeric <- df %>% select(where(is.numeric))
-cor_mat <- cor(df_numeric, use="pairwise.complete.obs")
+life_num <- life %>% select(where(is.numeric))
+cor_mat  <- cor(life_num, use = "pairwise.complete.obs")
 
-corrplot(cor_mat, method="color", tl.cex=0.6)
+corrplot(cor_mat, method = "color", tl.cex = 0.6)
 
-Distribution de l'espérance de vie
+# 3.3 Distribution de l'espérance de vie
 Rédaction
 
-ggplot(df, aes(life_expectancy)) +
-geom_histogram(bins=30, fill="#4C72B0", color="white") +
-labs(title="Distribution de l'espérance de vie")
+ggplot(data = life, aes(x = life_expectancy)) +
+geom_histogram(bins = 30, fill = "#4C72B0", color = "white") +
+labs(
+title = "Distribution de l'espérance de vie",
+x = "Espérance de vie (années)",
+y = "Effectif"
+)
 
-Relation avec adult_mortality
+# 3.4 Relation avec la mortalité adulte
 Rédaction
 
-ggplot(df, aes(adult_mortality, life_expectancy)) +
-geom_point(alpha=0.5) +
-labs(title="Espérance de vie vs Mortalité adulte")
+ggplot(data = life, aes(x = adult_mortality, y = life_expectancy)) +
+geom_point(alpha = 0.5) +
+labs(
+title = "Espérance de vie vs mortalité adulte",
+x = "Mortalité adulte",
+y = "Espérance de vie (années)"
+)
 
-Espérance de vie selon le statut du pays
+# 3.5 Espérance de vie selon le statut du pays
 Rédaction
 
-ggplot(df, aes(Status, life_expectancy, fill=Status)) +
+ggplot(data = life, aes(x = Status, y = life_expectancy, fill = Status)) +
 geom_boxplot() +
-labs(title="Espérance de vie selon le statut du pays")
+labs(
+title = "Espérance de vie selon le statut du pays",
+x = "Statut",
+y = "Espérance de vie (années)"
+) +
+theme(legend.position = "none")
 
-PIB vs Espérance de vie (log)
+# 3.6 PIB vs espérance de vie (échelle logarithmique)
 Rédaction
 
-ggplot(df, aes(gdp, life_expectancy)) +
-geom_point(alpha=0.5) +
+ggplot(data = life, aes(x = gdp, y = life_expectancy)) +
+geom_point(alpha = 0.5) +
 scale_x_log10() +
-labs(title="Espérance de vie vs PIB (échelle logarithmique)")
+labs(
+title = "Espérance de vie vs PIB (log10)",
+x = "PIB (log10)",
+y = "Espérance de vie (années)"
+)
 
 # 4. Nettoyage final
-Suppression des NA sur la variable cible
+# 4.1 Suppression des NA sur la variable cible
 Rédaction
 
-df <- df %>% filter(!is.na(life_expectancy))
+life <- life %>% filter(!is.na(life_expectancy))
 
-Imputation médiane pour les autres colonnes numériques
+# 4.2 Imputation médiane pour les variables numériques
 Rédaction
 
-df <- df %>%
-mutate(across(where(is.numeric), ~ ifelse(is.na(.), median(., na.rm=TRUE), .)))
+life <- life %>%
+mutate(
+across(
+where(is.numeric),
+~ ifelse(is.na(.), median(., na.rm = TRUE), .)
+)
+)
 
-Vérification finale
-Rédaction
-
-sum(is.na(df))
+sum(is.na(life))
 
 # 5. Modélisation linéaire simple
-Création train/test
+# 5.1 Création des échantillons d'apprentissage et de test
 Rédaction
 
 set.seed(123)
-n <- nrow(df)
-train_idx <- sample(1, size = 0.8*n)
+n <- nrow(life)
+train_idx <- sample(seq_len(n), size = 0.8 * n)
 
-train <- df[train_idx, ]
-test <- df[-train_idx, ]
+train <- life[train_idx, ]
+test <- life[-train_idx, ]
 
-Modèle linéaire
+# 5.2 Fonctions de métriques (RMSE, R²)
+Rédaction
+
+rmse <- function(y, yhat) sqrt(mean((y - yhat)^2))
+r2 <- function(y, yhat) 1 - sum((y - yhat)^2) / sum((y - mean(y))^2)
+
+# 5.3 Modèle linéaire
 Rédaction
 
 formule_lm <- life_expectancy ~ adult_mortality + gdp + schooling +
 income_composition + hiv_aids + bmi + alcohol + Status + Year
 
-modele_lm <- lm(formule_lm, data=train)
+modele_lm <- lm(formule_lm, data = train)
 summary(modele_lm)
 
-Évaluation
+# 5.4 Évaluation du modèle linéaire
 Rédaction
 
-pred_train <- predict(modele_lm, newdata=train)
-pred_test <- predict(modele_lm, newdata=test)
-
-rmse <- function(y,yhat) sqrt(mean((y-yhat)^2))
-r2 <- function(y,yhat) 1 - sum((y-yhat)^2) / sum((y-mean(y))^2)
+pred_train <- predict(modele_lm, newdata = train)
+pred_test <- predict(modele_lm, newdata = test)
 
 rmse_train <- rmse(train$life_expectancy, pred_train)
 rmse_test <- rmse(test$life_expectancy, pred_test)
 r2_train <- r2(train$life_expectancy, pred_train)
 r2_test <- r2(test$life_expectancy, pred_test)
 
+tibble(
+jeu = c("train", "test"),
+RMSE = c(rmse_train, rmse_test),
+R2 = c(r2_train, r2_test)
+)
+
 # 6. Sélection de variables
-Stepwise AIC
+# 6.1 Stepwise AIC
 Rédaction
 
-modele_full <- lm(formule_lm, data=train)
-modele_step <- stepAIC(modele_full, direction="both", trace=FALSE)
+modele_full <- lm(formule_lm, data = train)
+modele_step <- stepAIC(modele_full, direction = "both", trace = FALSE)
 summary(modele_step)
 
-LASSO
+pred_step_train <- predict(modele_step, newdata = train)
+pred_step_test <- predict(modele_step, newdata = test)
+
+rmse_step_train <- rmse(train$life_expectancy, pred_step_train)
+rmse_step_test <- rmse(test$life_expectancy, pred_step_test)
+r2_step_train <- r2(train$life_expectancy, pred_step_train)
+r2_step_test <- r2(test$life_expectancy, pred_step_test)
+
+# 6.2 LASSO
 Rédaction
 
-X_train <- model.matrix(formule_lm, data=train)[,-1]
-X_test <- model.matrix(formule_lm, data=test)[,-1]
+X_train <- model.matrix(formule_lm, data = train)[, -1]
+X_test  <- model.matrix(formule_lm, data = test)[, -1]
 y_train <- train$life_expectancy
 y_test <- test$life_expectancy
 
 set.seed(123)
-cv_lasso <- cv.glmnet(X_train, y_train, alpha=1)
-modele_lasso <- glmnet(X_train, y_train, alpha=1, lambda=cv_lasso$lambda.min)
+cv_lasso <- cv.glmnet(X_train, y_train, alpha = 1)
+modele_lasso <- glmnet(
+X_train, y_train,
+alpha = 1,
+lambda = cv_lasso$lambda.min
+)
+
+pred_lasso_train <- as.numeric(predict(modele_lasso, X_train))
+pred_lasso_test <- as.numeric(predict(modele_lasso, X_test))
+
+rmse_lasso_train <- rmse(y_train, pred_lasso_train)
+rmse_lasso_test <- rmse(y_test, pred_lasso_test)
+r2_lasso_train <- r2(y_train, pred_lasso_train)
+r2_lasso_test <- r2(y_test, pred_lasso_test)
 
 # 7. Random Forest
 Rédaction
 
 train_rf <- train %>% select(-Country)
-test_rf <- test %>% select(-Country)
+test_rf <- test  %>% select(-Country)
 
+set.seed(123)
 modele_rf <- randomForest(
 life_expectancy ~ .,
-data=train_rf,
-ntree=500,
-mtry=4,
-importance=TRUE
+data = train_rf,
+ntree = 500,
+mtry = 4,
+importance = TRUE
 )
 
-# 8. Comparaison finale
+pred_rf_train <- predict(modele_rf, newdata = train_rf)
+pred_rf_test <- predict(modele_rf, newdata = test_rf)
+
+rmse_rf_train <- rmse(train_rf$life_expectancy, pred_rf_train)
+rmse_rf_test <- rmse(test_rf$life_expectancy, pred_rf_test)
+r2_rf_train <- r2(train_rf$life_expectancy, pred_rf_train)
+r2_rf_test <- r2(test_rf$life_expectancy, pred_rf_test)
+
+# 8. Comparaison finale des modèles
 Rédaction
 
 comparaison_finale <- tibble(
 Model = c("Régression linéaire", "LASSO", "Stepwise", "Random Forest"),
-RMSE_Train = c(rmse_train, rmse(y_train,predict(modele_lasso,X_train)), rmse(train$life_expectancy,predict(modele_step,train)), sqrt(mean((train_rf$life_expectancy-predict(modele_rf,train_rf))^2))),
-RMSE_Test = c(rmse_test, rmse(y_test,predict(modele_lasso,X_test)), rmse(test$life_expectancy,predict(modele_step,test)), sqrt(mean((test_rf$life_expectancy-predict(modele_rf,test_rf))^2))),
-R2_Train = c(r2_train, r2(y_train,predict(modele_lasso,X_train)), r2(train$life_expectancy,predict(modele_step,train)),
-1 - sum((train_rf$life_expectancy-predict(modele_rf,train_rf))^2)/sum((train_rf$life_expectancy-mean(train_rf$life_expectancy))^2)),
-R2_Test = c(r2_test, r2(y_test,predict(modele_lasso,X_test)), r2(test$life_expectancy,predict(modele_step,test)),
-1 - sum((test_rf$life_expectancy-predict(modele_rf,test_rf))^2)/sum((test_rf$life_expectancy-mean(test_rf$life_expectancy))^2))
+RMSE_Train = c(rmse_train, rmse_lasso_train, rmse_step_train, rmse_rf_train),
+RMSE_Test = c(rmse_test, rmse_lasso_test, rmse_step_test, rmse_rf_test),
+R2_Train = c(r2_train, r2_lasso_train, r2_step_train, r2_rf_train),
+R2_Test = c(r2_test, r2_lasso_test, r2_step_test, r2_rf_test)
 )
 
 comparaison_finale
 
 # 9. Importance des variables
-Modèle linéaire (blindé sans caractères spéciaux)
+# 9.1 Modèle linéaire
 Rédaction
 
 coeffs <- as.data.frame(summary(modele_lm)$coefficients)
@@ -252,16 +300,22 @@ coeffs$Variable <- rownames(coeffs)
 coeffs <- coeffs %>% filter(Variable != "(Intercept)")
 coeffs$Importance <- abs(coeffs$Estimate)
 
-top_lm <- coeffs %>% arrange(desc(Importance)) %>% head(10)
+top_lm <- coeffs %>%
+arrange(desc(Importance)) %>%
+slice(1:10)
+
 top_lm
 
-Random Forest
+# 9.2 Random Forest
 Rédaction
 
 imp_rf <- as.data.frame(importance(modele_rf))
 imp_rf$Variable <- rownames(imp_rf)
 
-top_rf <- imp_rf %>% arrange(desc(%IncMSE)) %>% head(10)
+top_rf <- imp_rf %>%
+arrange(desc(`%IncMSE`)) %>%
+slice(1:10)
+
 top_rf
 
 # 10. Conclusion générale
@@ -274,9 +328,9 @@ L'espérance de vie est fortement influencée par :
 
 - le statut de développement du pays.
 
-Le modèle Random Forest offre la meilleure performance prédictive.
+Le modèle Random Forest offre la meilleure performance prédictive sur ce jeu de données, en capturant des effets non linéaires et des interactions entre variables.
 
-Les variables les plus importantes sont cohérentes entre les modèles.
+Les variables les plus importantes sont cohérentes entre les modèles : revenu/éducation, mortalité adulte, VIH/SIDA, indicateurs de nutrition et de dépenses de santé.
 
 Investir dans l'éducation, réduire la mortalité adulte et lutter contre le VIH sont des leviers majeurs pour augmenter l'espérance de vie.
 

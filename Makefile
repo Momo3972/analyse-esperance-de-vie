@@ -17,8 +17,8 @@ REPORT_DOCX  = $(OUTPUTS_DIR)/rapport_final.docx
 # 1) Règle par défaut : tout construire
 all: $(REPORT_DOCX)
 
-# 2) Étape 1 : nettoyage / modélisation (ton gros script)
-#    On suppose que 01_import_cleaning.R :
+# 2) Étape 1 : nettoyage / modélisation
+#    01_import_cleaning.R :
 #    - lit les données brutes
 #    - fait le nettoyage + modèles
 #    - sauvegarde les outputs dans /outputs
@@ -26,7 +26,7 @@ $(DATA_CLEAN): $(DATA_RAW) $(SCRIPTS_DIR)/01_import_cleaning.R
 	$(R_SCRIPT) $(SCRIPTS_DIR)/01_import_cleaning.R
 
 # 3) Étape 2 : génération du rapport Word
-#    02_generate_report.R doit appeler rmarkdown::render(...)
+#    02_generate_report.R appelle rmarkdown::render(...)
 $(REPORT_DOCX): $(REPORT_RMD) $(SCRIPTS_DIR)/02_generate_report.R $(DATA_CLEAN)
 	$(R_SCRIPT) $(SCRIPTS_DIR)/02_generate_report.R
 
