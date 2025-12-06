@@ -21,7 +21,7 @@ L’objectif est double :
   - `BMI` : indice de masse corporelle moyen
   - `HIV/AIDS` : mortalité liée au VIH/SIDA
   - `GDP` : produit intérieur brut par habitant 
-  - `Schooling` : nombre moyen d’années de scolarisation  
+  - `Schooling` : nombre moyen d’années de scolarisation 
   - `Status` : *Developed* / *Developing*
 
 Ces variables sont ensuite renommées en `snake_case` dans le script pour faciliter la manipulation (`life_expectancy`, `adult_mortality`, `income_composition`, etc.)
@@ -171,7 +171,7 @@ Résultats principaux :
 
 Le modèle sert de **baseline interprétable**.
 
-### 3.3 Sélection de variables – Stepwise AIC
+### 3.3 Sélection de variables - Stepwise AIC
 
 À partir du modèle complet, une procédure **Stepwise AIC** (avant/arrière) est appliquée :
 
@@ -396,15 +396,14 @@ make clean
 ## 9. Conclusion générale
 
 - L’espérance de vie est fortement liée :  
-  - aux **conditions socio-économiques** (`income_composition`, `schooling`), 
-  - à la **mortalité adulte** et aux **maladies infectieuses** (`hiv_aids`, `infant_deaths`),  
-  - au **niveau de développement** (`Status`).  
-- Les modèles linéaires offrent une lecture claire des effets marginaux, mais le **Random Forest** fournit la meilleure précision prédictive.  
-- La mise en place d’un **workflow entièrement reproductible** (Makefile + scripts + RMarkdown) permet de rejouer facilement toute l’analyse en cas de mise à jour des données ou d’extension du projet.
+  - aux **conditions socio-économiques** (`income_composition`, `schooling`)
+  - à la **mortalité adulte** et aux **maladies infectieuses** (`hiv_aids`, `infant_deaths`) 
+  - au **niveau de développement** (`Status`)
+- Les modèles linéaires offrent une lecture claire des effets marginaux, mais le **Random Forest** fournit la meilleure précision prédictive  
+- La mise en place d’un **workflow entièrement reproductible** (Makefile + scripts + RMarkdown) permet de rejouer facilement toute l’analyse en cas de mise à jour des données ou d’extension du projet
 
 ---
 
 ## 10. Contact
 
-Pour toute question ou suggestion d’amélioration : *Mohamed Lamine OULD BOUYA*  
-Dépôt GitHub : `analyse-esperance-de-vie`
+Pour toute question ou suggestion d’amélioration : *Mohamed Lamine OULD BOUYA*
