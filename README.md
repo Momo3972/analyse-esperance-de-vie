@@ -1,4 +1,4 @@
-# Analyse de l'espérance de vie (2000–2015)
+# Analyse de l'espérance de vie (2000 - 2015)
 
 Ce projet analyse les déterminants de l’espérance de vie dans le monde à partir des données de l’Organisation Mondiale de la Santé (OMS) pour la période **2000–2015**.  
 L’objectif est double :
